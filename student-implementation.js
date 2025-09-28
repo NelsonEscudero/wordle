@@ -199,7 +199,7 @@ function checkLetter(guessLetter, position, targetWord) {
     if (target.includes(letter)) {
         const targetCount = WordleWords.countLetter(letter, target);
         let guessCount = 0;
-        for (let i = 0; i <= position; i++) {
+        for (let i = 0; i < WORD_LENGTH; i++) {
             if (currentGuess[i].toUpperCase() === letter) guessCount++;
         }
         
