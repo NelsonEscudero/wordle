@@ -81,7 +81,7 @@ function handleKeyPress(key) {
     } 
     
     if (key === "ENTER") {
-        if (isGuessComplete) {
+        if (isGuessComplete()) {
             submitGuess();
         } else {
             showMessage("Guess is not complete", "error");
@@ -138,7 +138,7 @@ function submitGuess() {
     // TODO: Update tile colors immediately
     // HINT: Loop through results and use setTileState()
     
-    for (let i = 0; i < results.length; i++) {
+    for (let i = 0; i < WORD_LENGTH; i++) {
         setTileState(getTile(currentRow, i) , results[i]);
     }
 
@@ -156,12 +156,12 @@ function submitGuess() {
     // TODO: Move to next row if game continues
     // HINT: Increment currentRow and reset currentGuess
 
-    if (currentGuess === currentWord) {
+    if (currentGuess.toUpperCase() === currentWord) {
         updateGameState(true);
         return;
-    } else {
-        updateGameState(false);
     }
+
+    updateGameState(false);
 
     currentRow++;
     currentGuess = '';
@@ -186,7 +186,7 @@ function checkLetter(guessLetter, position, targetWord) {
 
     // TODO: Check if letter is in correct position
     // HINT: Compare targetWord[position] with guessLetter
-    if (target[position] == letter) {
+    if (target[position] === letter) {
         return 'correct';
     }
 
@@ -202,13 +202,7 @@ function checkLetter(guessLetter, position, targetWord) {
         for (let i = 0; i <= position; i++) {
             if (currentGuess[i].toUpperCase() === letter) guessCount++;
         }
-
-        let correctCount = 0;
-        for (let i = 0; i <= WORD_LENGTH; i++) {
-            if (currentGuess[i].toUpperCase() === letter && target[i] === letter) correctCount++;
-        }
         
-
         if (guessCount <= targetCount) {
             return 'present';
         }
