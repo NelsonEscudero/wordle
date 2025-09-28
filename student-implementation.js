@@ -42,7 +42,7 @@ function initializeGame() {
     // TODO: Hide any messages
     // HINT: Use hideModal() and ensure message element is hidden
     hideModal();
-
+    messageElement.classList.add("hidden");
     console.log('Game initialized!'); // Remove this line when implementing
 }
 
@@ -72,6 +72,28 @@ function handleKeyPress(key) {
     // HINT: Check if there are letters to remove
     // HINT: Clear the tile display and remove from currentGuess
     
+    if (gameOver) return;
+
+    if (/^[A-Z]$/.test(key)) {
+        if (currentGuess.length >= WORD_LENGTH) return; 
+        currentGuess += key;
+        updateTileDisplay(getTile(currentRow, currentGuess.length - 1), key);
+    } 
+    
+    if (key === "ENTER") {
+        if (isGuessComplete) {
+            submitGuess();
+        } else {
+            showMessage("Guess is not complete", "error");
+        }
+    }
+
+    if (key === "BACKSPACE") {
+        if (currentGuess.length <= 0) return;
+        updateTileDisplay(getTile(currentRow, currentGuess.length - 1), '');
+        currentGuess = currentGuess.slice(0, -1);
+    }
+
     console.log('Key pressed:', key); // Remove this line when implementing
 }
 
@@ -89,20 +111,42 @@ function submitGuess() {
     // TODO: Validate guess is complete
     // HINT: Use isGuessComplete()
     
+    if (!isGuessComplete()) return;
+
     // TODO: Validate guess is a real word
     // HINT: Use WordleWords.isValidWord()
     // HINT: Show error message and shake row if invalid
     
+    if (!WordleWords.isValidWord(currentGuess)) {
+        showMessage("Invalid guess", "error");
+        shakeRow(currentRow);
+        return;
+    }
+
     // TODO: Check each letter and get results
     // HINT: Use checkLetter() for each position
     // HINT: Store results in an array
-    
+
+    let results = new Array(WORD_LENGTH);
+    for (let i = 0; i < currentGuess.length; i++) {
+        const curr_result = checkLetter(currentGuess[i], i, currentWord);
+        results[i] = curr_result;
+    }
+
+
+
     // TODO: Update tile colors immediately
     // HINT: Loop through results and use setTileState()
     
+    for (let i = 0; i < results.length; i++) {
+        setTileState(getTile(currentRow, i) , results[i]);
+    }
+
     // TODO: Update keyboard colors
     // HINT: Call updateKeyboardColors()
     
+    updateKeyboardColors(currentGuess, results);
+
     // TODO: Check if guess was correct
     // HINT: Compare currentGuess with currentWord
     
@@ -111,6 +155,16 @@ function submitGuess() {
     
     // TODO: Move to next row if game continues
     // HINT: Increment currentRow and reset currentGuess
+
+    if (currentGuess === currentWord) {
+        updateGameState(true);
+        return;
+    } else {
+        updateGameState(false);
+    }
+
+    currentRow++;
+    currentGuess = '';
     
     console.log('Guess submitted:', currentGuess); // Remove this line when implementing
 }
@@ -127,17 +181,39 @@ function submitGuess() {
  */
 function checkLetter(guessLetter, position, targetWord) {
     // TODO: Convert inputs to uppercase for comparison
-    
+    const letter = guessLetter.toUpperCase();
+    const target = targetWord.toUpperCase();
+
     // TODO: Check if letter is in correct position
     // HINT: Compare targetWord[position] with guessLetter
-    
+    if (target[position] == letter) {
+        return 'correct';
+    }
+
     // TODO: Check if letter exists elsewhere in target
     // HINT: Use targetWord.includes() or indexOf()
-    
+
     // TODO: Handle duplicate letters correctly
     // This is the most challenging part - you may want to implement
     // a more sophisticated algorithm that processes the entire word
-    
+    if (target.includes(letter)) {
+        const targetCount = WordleWords.countLetter(letter, target);
+        let guessCount = 0;
+        for (let i = 0; i <= position; i++) {
+            if (currentGuess[i].toUpperCase() === letter) guessCount++;
+        }
+
+        let correctCount = 0;
+        for (let i = 0; i <= WORD_LENGTH; i++) {
+            if (currentGuess[i].toUpperCase() === letter && target[i] === letter) correctCount++;
+        }
+        
+
+        if (guessCount <= targetCount) {
+            return 'present';
+        }
+    }
+
     console.log('Checking letter:', guessLetter, 'at position:', position); // Remove this line
     return 'absent'; // Replace with actual logic
 }
@@ -154,10 +230,18 @@ function checkLetter(guessLetter, position, targetWord) {
 function updateGameState(isCorrect) {
     // TODO: Handle win condition
     // HINT: Set gameWon and gameOver flags, call showEndGameModal
-    
+
     // TODO: Handle lose condition  
     // HINT: Check if currentRow >= MAX_GUESSES - 1
-    
+
+    if (isCorrect) {
+        gameWon = true;
+        gameOver = true;
+        showEndGameModal(true, currentWord);
+    } else if (currentRow >= MAX_GUESSES - 1) {
+        gameOver = true;
+        showEndGameModal(false, currentWord);
+    }
     console.log('Game state updated. Correct:', isCorrect); // Remove this line
 }
 
